@@ -1,6 +1,9 @@
 from manim import *
 from colour import Color
 
+HORIZONTAL = 0
+VERTICAL = 1
+
 
 class Intro(Scene):
 
@@ -42,7 +45,7 @@ class Problem(Scene):
 
 		self.camera.background_color = "#FFFFFF"
 
-        # create title
+		# create title
 		title = Txt("Edit Distance").to_edge(UP)
 		for letter in title:
 			self.play(FadeIn(letter), run_time = 0.05)
@@ -50,7 +53,7 @@ class Problem(Scene):
 		title_line.next_to(title, DOWN)
 		self.play(Create(title_line))
 
-        # definition
+		# definition
 		problem_text = [
 				"Minimum number of edits required to", 
 				"transform one string to another" 
@@ -74,6 +77,7 @@ class Problem(Scene):
 				Sequence("GTTTAAC ")) \
 				.arrange(direction=RIGHT).next_to(ref, DOWN)
 		query.align_to(ref, RIGHT)
+		query[1].shift(DOWN*0.12)
 		self.add(query)
 		self.wait(1)
 		self.remove(query[1])
@@ -94,21 +98,44 @@ class Problem(Scene):
 		self.add(edits[0])
 		self.wait(1)
 
-        # ins
-		self.play(ApplyMethod(ref[3][5:].shift, RIGHT*0.5))
+		# ins
+		self.play(ApplyMethod(ref[3][5:].shift, RIGHT*0.45))
 		insertion = BackgroundRectangle(query[3][5],
 				fill_color=GREEN_A, fill_opacity=1)
-		insertion.stretch_about_point(2.5, 1, insertion.get_bottom())
+		insertion.stretch_about_point(2.5, VERTICAL, insertion.get_bottom())
 		insertion.set_z_index(ref.z_index-1)
 		self.add(insertion)
 		self.add(edits[1])
 		self.wait(1)
 
-        # del
+		# del
 		deletion = BackgroundRectangle(ref[3][6], 
 				fill_color=RED_A, fill_opacity=1)
-		deletion.stretch_about_point(2.5, 1, insertion.get_top())
+		deletion.stretch_about_point(2.5, VERTICAL, insertion.get_top())
 		deletion.set_z_index(ref.z_index-1)
 		self.add(deletion)
 		self.add(edits[2])
 		self.wait(2)
+		self.remove(edits)
+
+		# slide over insertion
+		self.play(ApplyMethod(ref[3][4].shift, RIGHT*0.45),
+				  ApplyMethod(insertion.shift, LEFT*0.45)
+		)
+		self.wait()
+
+		# show all inserted, all deleted
+		self.remove(substitution)
+		self.play(ApplyMethod(ref[3][4:].align_to, ref[3][3].get_right(), LEFT), 
+				  ApplyMethod(deletion.align_to, ref[3].get_left(), LEFT),
+				  ApplyMethod(insertion.align_to, deletion.get_left(), LEFT),
+				  ApplyMethod(query[3].align_to, deletion.get_left(), LEFT),
+		)
+		self.play(deletion.animate.stretch_about_point(7.38, HORIZONTAL, deletion.get_left()),
+					insertion.animate.stretch_about_point(7.38, HORIZONTAL, insertion.get_left()),
+					)
+
+
+		# add time at end
+		self.wait(3)
+		

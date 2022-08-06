@@ -16,12 +16,19 @@ Edits can take the form of substitutions (where a single character is exchanged 
 > DEL = red
 
 There are always multiple ways to transform the query to the reference. 
-For example, we could always delete the entire query sequence and insert the whole reference. 
+> slide insertion over
+For example, we could always delete the entire reference sequence and insert the whole query. 
+> show this
 We are looking for the minimum possible number of edits.
-> three examples
+> numbers above, counting edits
+> transition back to earlier example, 3 edits
 
 Intuition: Dynamic Programming
 ------------------------------
+** look back at CLRS
+We can solve this problem efficiently using a matrix of all possible prefixes of R and Q. 
+> generate matrix, show examples
+Explain sub, match, insertion, deletion movements
 
 Example
 -------
