@@ -33,7 +33,7 @@ class Sequence(Text):
 
 class Txt(Text):
 	def __init__(self, text, color=BLACK, **kwargs):
-		Text.__init__(self, text, font="Noto Sans", color=color, **kwargs)
+		Text.__init__(self, str(text), font="Noto Sans", color=color, **kwargs)
 
 
 
@@ -135,7 +135,39 @@ class Problem(Scene):
 					insertion.animate.stretch_about_point(7.38, HORIZONTAL, insertion.get_left()),
 					)
 
+		# show terrible edit distance 14
+		dists = []
+		for i in range(len(ref[3]) + len(query[3])):
+			if i < len(ref[3]):
+				dists.append(Txt(i+1, font_size=20).next_to(ref[3][i], UP*0.5))
+			else:
+				dists.append(Txt(i+1, font_size=20)
+						.next_to(query[3][i-len(ref[3])], UP)
+						.align_to(dists[0].get_top(), UP))
+		for i in range(len(dists)):
+			self.add(dists[i])
+			self.wait(0.1)
+		self.wait()
+		for i in range(len(dists)):
+			self.remove(dists[i])
+
+		# revert to earlier alignment
+		self.add(substitution)
+		self.play(
+				deletion.animate.stretch_about_point(1/7.38, HORIZONTAL, deletion.get_right()).align_to(query[3].get_left(), LEFT),
+				insertion.animate.stretch_about_point(1/7.38, HORIZONTAL, insertion.get_left()).align_to(ref[3][5].get_left(), LEFT),
+				query[3].animate.align_to(ref[3].get_left(), LEFT),
+				ref[3][5:].animate.align_to(ref[3][6].get_left(), LEFT),
+		)
+		self.wait()
+		dists = [ Txt(1, font_size=20).next_to(ref[3][1], UP*0.5) ]
+		dists.append(Txt(2, font_size=20)
+				.next_to(query[3][5], UP)
+				.align_to(dists[0].get_top(), UP))
+		dists.append(Txt(3, font_size=20).next_to(ref[3][6], UP*0.5))
+		for i in range(3):
+			self.add(dists[i])
+			self.wait(0.1)
 
 		# add time at end
 		self.wait(3)
-		
