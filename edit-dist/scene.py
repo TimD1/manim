@@ -4,6 +4,10 @@ from colour import Color
 HORIZONTAL = 0
 VERTICAL = 1
 
+MATCH = 0
+DELETE = 1
+INSERT = 2
+W = 0.45 # letter width
 
 class Intro(Scene):
 
@@ -170,4 +174,84 @@ class Problem(Scene):
 			self.wait(0.1)
 
 		# add time at end
+		self.wait(3)
+
+
+
+class TextAlignment():
+
+	def __init__(self, scene, title):
+		ref = VGroup(Txt("R: ", weight=BOLD), Sequence("GATTACA")) \
+				.arrange(direction=RIGHT).next_to(title, DOWN*3)
+		scene.add(ref)
+
+		query = VGroup(Txt("Q: ", weight=BOLD), Sequence("GTTTAAC")) \
+				.arrange(direction=RIGHT).next_to(ref, DOWN)
+		query.align_to(ref, RIGHT)
+		scene.add(query)
+		scene.wait(1)
+
+		rseq = ref[1]
+		qseq = query[1]
+		maxlen = 3
+		# maxlen = len(rseq) + len(qseq)
+		status = [MATCH] * maxlen
+		pos = 0
+		ridx = 0
+		qidx = 0
+		rshifts = [0] * len(rseq)
+		qshifts = [0] * len(qseq)
+		carry = False
+		while pos < maxlen:
+			if status[pos] == MATCH: # 0->1
+				status[pos] = INSERT
+				if carry:
+					qshifts[:pos] = [x-1 for x in qshifts[:pos]]
+					# rshifts[pos:] = [x-1 for x in rshifts[pos:]]
+				rshifts[ridx:] = [x+1 for x in rshifts[ridx:]]
+			elif status[pos] == INSERT: # 1->2
+				status[pos] = DELETE
+				qshifts[qidx:] = [x+1 for x in qshifts[qidx:]]
+				rshifts[ridx:] = [x-1 for x in rshifts[ridx:]]
+			elif status[pos] == DELETE: # 2->0
+				status[pos] = MATCH
+				pos += 1
+				qshifts[:qidx] = [x-1 for x in qshifts[:qidx]]
+				carry = True
+				continue # carry
+
+			scene.play( 
+				*(
+					[rbase.animate.shift(LEFT*abs(rshift)*W if rshift < 0 else 
+						RIGHT*abs(rshift)*W) for rbase, rshift in zip(rseq, rshifts)] +
+					[qbase.animate.shift(LEFT*abs(qshift)*W if qshift < 0 else 
+						RIGHT*abs(qshift)*W) for qbase, qshift in zip(qseq, qshifts)]
+				)
+			)
+			rshifts = [0] * len(rseq)
+			qshifts = [0] * len(qseq)
+			pos = 0
+			carry = False
+
+		
+
+
+
+class Intuition(Scene):
+
+	def construct(self):
+
+		self.camera.background_color = "#FFFFFF"
+
+		# create title
+		title = Txt("Minimum Edit Distance Algorithm").to_edge(UP)
+		for letter in title:
+			self.play(FadeIn(letter), run_time = 0.05)
+		title_line = Line(LEFT*6, RIGHT*6, color=BLACK)
+		title_line.next_to(title, DOWN)
+		self.play(Create(title_line))
+
+		# naive approach
+		alignment = TextAlignment(self, title)
+
 		self.wait(3)
