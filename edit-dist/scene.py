@@ -182,58 +182,60 @@ class TextAlignment():
 
 	def __init__(self, scene, title):
 		ref = VGroup(Txt("R: ", weight=BOLD), Sequence("GATTACA")) \
-				.arrange(direction=RIGHT).next_to(title, DOWN*3)
+				.arrange(direction=RIGHT).next_to(title, DOWN*3).shift(LEFT)
+		ref[1].align_to(ref[0].get_right()+RIGHT*W/2, LEFT)
 		scene.add(ref)
 
 		query = VGroup(Txt("Q: ", weight=BOLD), Sequence("GTTTAAC")) \
 				.arrange(direction=RIGHT).next_to(ref, DOWN)
+		query[1].align_to(ref[0].get_right()+RIGHT*W/2, LEFT)
 		query.align_to(ref, RIGHT)
 		scene.add(query)
 		scene.wait(1)
 
 		rseq = ref[1]
 		qseq = query[1]
-		maxlen = 3
-		# maxlen = len(rseq) + len(qseq)
-		status = [MATCH] * maxlen
-		pos = 0
-		ridx = 0
-		qidx = 0
-		rshifts = [0] * len(rseq)
-		qshifts = [0] * len(qseq)
-		carry = False
-		while pos < maxlen:
-			if status[pos] == MATCH: # 0->1
-				status[pos] = INSERT
-				if carry:
-					qshifts[:pos] = [x-1 for x in qshifts[:pos]]
-					# rshifts[pos:] = [x-1 for x in rshifts[pos:]]
-				rshifts[ridx:] = [x+1 for x in rshifts[ridx:]]
-			elif status[pos] == INSERT: # 1->2
-				status[pos] = DELETE
-				qshifts[qidx:] = [x+1 for x in qshifts[qidx:]]
-				rshifts[ridx:] = [x-1 for x in rshifts[ridx:]]
-			elif status[pos] == DELETE: # 2->0
-				status[pos] = MATCH
-				pos += 1
-				qshifts[:qidx] = [x-1 for x in qshifts[:qidx]]
-				carry = True
-				continue # carry
+		rlen = len(rseq)
+		qlen = len(qseq)
+		maxlen = len(rseq) + len(qseq)
+		count = 0
+		runtime = 1
+		for x in range(40):
+			shift_list = []
+			ridx = 0
+			qidx = 0
+			power = 0
+			while power < maxlen:
+				rem = x % 3
+				if rem == 0: # ref and idx align
+					if ridx < rlen:
+						shift_list.append( rseq[ridx].animate.align_to(
+								ref[0].get_right()+RIGHT*W/2, LEFT).shift(power*RIGHT*W),
+						)
+					ridx += 1
+					if qidx < qlen:
+						shift_list.append( qseq[qidx].animate.align_to(
+								ref[0].get_right()+RIGHT*W/2, LEFT).shift(power*RIGHT*W),
+						)
+					qidx += 1
+				elif rem == 1:
+					if ridx < rlen:
+						shift_list.append( rseq[ridx].animate.align_to(
+								ref[0].get_right()+RIGHT*W/2, LEFT).shift(power*RIGHT*W),
+						)
+					ridx += 1
+				else:
+					if qidx < qlen:
+						shift_list.append( qseq[qidx].animate.align_to(
+								ref[0].get_right()+RIGHT*W/2, LEFT).shift(power*RIGHT*W),
+						)
+					qidx += 1
 
-			scene.play( 
-				*(
-					[rbase.animate.shift(LEFT*abs(rshift)*W if rshift < 0 else 
-						RIGHT*abs(rshift)*W) for rbase, rshift in zip(rseq, rshifts)] +
-					[qbase.animate.shift(LEFT*abs(qshift)*W if qshift < 0 else 
-						RIGHT*abs(qshift)*W) for qbase, qshift in zip(qseq, qshifts)]
-				)
-			)
-			rshifts = [0] * len(rseq)
-			qshifts = [0] * len(qseq)
-			pos = 0
-			carry = False
+				power += 1
+				x //= 3
 
-		
+			scene.play(*shift_list, run_time = max(runtime, 0.1))
+			runtime *= 0.9
 
 
 
